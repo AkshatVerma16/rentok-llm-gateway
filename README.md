@@ -127,7 +127,6 @@ requirements.txt  Flask + gunicorn, pinned
 .env.example      All env vars, placeholders only
 DECISIONS.md      Design reasoning — the most important document
 AI-LOG.md         How AI was used to build this
-HOW_TO_EXPLAIN.md 2-minute walkthrough for the follow-up call
 TESTLOG.md        Real test commands and outputs
 ```
 
