@@ -1,0 +1,6 @@
+# RentOk LLM Gateway — Python dependencies.
+# Flask is the only web dependency. Everything else (SQLite, HTTP calls
+# to the provider, hashing) uses the Python standard library.
+# gunicorn is used only when deploying (e.g. `gunicorn app:app`).
+Flask==3.1.0
+gunicorn==23.0.0

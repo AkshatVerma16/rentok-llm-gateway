@@ -1,0 +1,17 @@
+# Render Blueprint — deploys this Flask gateway as a free web service.
+# Connect the GitHub repo in Render, or use "New + -> Blueprint".
+# After deploy, set OPENAI_API_KEY in the Render dashboard only if
+# you want live mode; without it the gateway runs in mock mode.
+services:
+  - type: web
+    name: rentok-llm-gateway
+    env: python
+    buildCommand: pip install -r requirements.txt
+    # 1 worker on purpose: the per-key budget lock lives in-process,
+    # so a second worker would not see the first worker's lock.
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --threads 4
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: ADMIN_TOKEN
+        generateValue: true
