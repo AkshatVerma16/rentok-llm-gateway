@@ -79,6 +79,35 @@ def get_key_lock(key_id):
 
 db.init_db(DATABASE_PATH)
 
+
+def seed_demo_keys():
+    """Re-create the demo keys on every boot, if their env vars are set.
+
+    Why: the free Render host has no persistent disk, so the SQLite
+    file (and every key created through /admin/keys) is wiped on each
+    restart. A reviewer trying the key from the submission email
+    would then get 401 for a key that worked an hour earlier — that
+    actually happened twice on 18 Nov 2026. Seeding the same keys
+    from env vars on every boot fixes it: the keys are stable, their
+    budgets are tiny ($1.00 and $0.00008), and the values live only
+    in the host's env vars, never in the repo. With no env vars set
+    nothing is seeded and keys work exactly as before.
+    """
+    seeds = [
+        ("key_demo", "rentok-demo",
+         os.environ.get("DEMO_API_KEY", ""),
+         float(os.environ.get("DEMO_BUDGET_USD", "1.0"))),
+        ("key_budget_test", "budget-test-hr",
+         os.environ.get("BUDGET_TEST_API_KEY", ""),
+         float(os.environ.get("BUDGET_TEST_BUDGET_USD", "0.00008"))),
+    ]
+    for key_id, name, full_key, budget in seeds:
+        if not full_key:
+            continue
+        db.ensure_key(DATABASE_PATH, key_id, name, sha256_hex(full_key),
+                      full_key[:12], budget, None, now_iso())
+
+
 app = Flask(__name__)
 
 
@@ -142,6 +171,11 @@ def log_usage(key_id, model, provider, prompt_tokens, completion_tokens,
         status=status,
         created_at=now_iso(),
     )
+
+
+# Seed the demo keys now that the helpers above exist (sha256_hex,
+# now_iso). See seed_demo_keys for why this runs on every boot.
+seed_demo_keys()
 
 
 # ---- routes ----

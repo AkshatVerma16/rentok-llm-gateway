@@ -34,6 +34,16 @@ gunicorn app:app --bind 0.0.0.0:$PORT --workers 2 --threads 4
 | `OPENAI_BASE_URL` | No | `https://api.openai.com/v1` | OpenAI-compatible provider base URL |
 | `ADMIN_TOKEN` | No* | `dev-admin-token` | Token for `/admin/*` endpoints |
 | `DATABASE_PATH` | No | `data/gateway.db` | Where the SQLite file lives |
+| `DEMO_API_KEY` | No | *(empty)* | Demo key re-seeded on every boot ($1 budget) |
+| `DEMO_BUDGET_USD` | No | `1.0` | Budget for the seeded demo key |
+| `BUDGET_TEST_API_KEY` | No | *(empty)* | Budget-test key re-seeded on every boot |
+| `BUDGET_TEST_BUDGET_USD` | No | `0.00008` | Budget for the seeded budget-test key |
+
+Demo keys are seeded only when their env vars are set, and their
+values live only in the host's env vars — never in the repo. This
+exists because a free host has no persistent disk: without seeding,
+a restart wipes the SQLite file and every key in it. Usage history
+still resets on a restart; only the keys themselves survive.
 
 \* Change `ADMIN_TOKEN` before deploying — the dev default is only a
 fallback so the service runs locally. See `.env.example`.

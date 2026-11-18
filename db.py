@@ -113,6 +113,27 @@ def create_key(db_path, key_id, name, key_hash, key_prefix, budget_usd, models, 
                       models_json, created_at))
 
 
+def ensure_key(db_path, key_id, name, key_hash, key_prefix, budget_usd, models, created_at):
+    """Insert a key only if its hash is not already stored.
+
+    Used for the seeded demo keys (see app.py): Render's free tier
+    gives the service no persistent disk, so the SQLite file is lost
+    on every restart. Re-seeding the same demo keys on every boot —
+    INSERT OR IGNORE on the unique hash — means the keys printed in
+    the submission email keep working after a restart, instead of
+    dying with the database file. Usage history still resets on a
+    restart; only the keys themselves survive.
+    """
+    models_json = json.dumps(models) if models else None
+    with connect(db_path) as conn:
+        conn.execute(
+            "INSERT OR IGNORE INTO api_keys "
+            "(id, name, key_hash, key_prefix, budget_usd, models, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (key_id, name, key_hash, key_prefix, budget_usd,
+             models_json, created_at))
+
+
 def find_key_by_hash(db_path, key_hash):
     with connect(db_path) as conn:
         row = conn.execute(FIND_KEY_BY_HASH_SQL, (key_hash,)).fetchone()

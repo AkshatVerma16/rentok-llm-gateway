@@ -199,6 +199,24 @@ provider key. The response says clearly that it is a mock fallback.
 | Two parallel calls, near-exhausted key → 1×200 + 1×402 | PASS |
 | SQLite tables + SUM(cost_usd) spend | PASS |
 | Live mode, dead provider → labelled mock fallback | PASS |
+| Demo-key seeding survives a restart with an empty DB | PASS |
+
+## 18 Nov 2026 — demo keys seeded on boot (after two live failures)
+
+On the live Render service the demo key (`rk_live_dd0b…`) and the
+budget-test key (`rk_live_df77…`) both returned `key_not_found` —
+the free host had restarted (uptime back to ~3 minutes) and wiped
+the SQLite file. Fix: `seed_demo_keys()` in `app.py` re-creates the
+two demo keys from env vars on every boot (`INSERT OR IGNORE` in
+`db.ensure_key`).
+
+Local test, 18 Nov 2026 (venv, fresh DB dirs, mock mode):
+- Demo key chat → 200, cost $0.00003; usage spent $0.00003 /
+  remaining $0.99997 — PASS
+- Budget-test key → 200, 200, 402 — PASS
+- Server killed, restarted with an EMPTY database directory:
+  demo key chat → 200 again; budget-test key present with $0 spent
+  — PASS (keys survive a restart; usage history resets, as documented)
 
 Test databases were deleted after testing (`data/` and
 `/tmp/gateway-fallback.db`), so the delivered project starts clean.

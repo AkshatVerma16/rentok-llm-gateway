@@ -256,3 +256,15 @@ would most expect to be challenged on, and the challenge would be fair.
 - **Security hardening:** rate-limit the admin endpoints, rotate the
   admin token, give keys an expiry date, and add per-key daily caps
   on top of the total budget.
+- **Free-host restarts wipe the database:** Render's free tier has no
+  persistent disk, so the SQLite file is lost on every restart —
+  on 18 Nov 2026 this killed the demo keys in the submission email
+  twice (the live service restarted, uptime was back to ~3 minutes,
+  and both keys returned `key_not_found`). Fix I shipped the same
+  day: the two demo keys are re-seeded from env vars
+  (`DEMO_API_KEY` / `BUDGET_TEST_API_KEY`) on every boot
+  (`INSERT OR IGNORE` on the key hash), so the keys survive a
+  restart even though usage history still resets. The tradeoff is
+  honest: those two keys are fixed, public demo keys with tiny
+  budgets ($1.00 and $0.00008), not secret credentials — a real
+  deployment would use a persistent Postgres instead.
